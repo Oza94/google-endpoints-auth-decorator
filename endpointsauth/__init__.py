@@ -106,6 +106,8 @@ class EndpointsAuthenticator:
                 # args[0] = self, args[1] = request
                 self.assert_current_user(auth_level, getattr(args[1], self.dangerous_token_key))
                 return func(*args, **kwargs)
+            # copy docstring since its required by endpoints
+            func_wrapper.__doc__ = func.__doc__
             return func_wrapper
         return ensure_decorator
 
