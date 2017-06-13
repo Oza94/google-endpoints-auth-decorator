@@ -71,18 +71,21 @@ class AuthLevel(Enum):
     ADMINISTRATOR = 3
 
 class EndpointsAuthenticator:
-    def __init__(self, client_id, key_path, customer_id, super_admin_account, admin_group, cache=None, cache_prefix='auth'):
+    def __init__(self, client_id, key_path, customer_id, super_admin_account, admin_group, dangerous_token_key=None,
+        dangerous_tokens=[], cache=None, cache_prefix='auth'):
         self.client_id = client_id
         self.key_path = key_path
         self.cache = cache
         self.cache_prefix = cache_prefix
         self.super_admin_account = super_admin_account
         self.admin_group = admin_group
+        self.dangerous_token_key = dangerous_token_key
+        self.dangerous_tokens = dangerous_tokens
         self.customer_id = customer_id
         self.service = None
 
     def get_service(self):
-        if self.service is None: 
+        if self.service is None:
             key_content = read_key(self.key_path)
             credentials = SignedJwtAssertionCredentials(self.client_id, key_content, SCOPES,
                 sub=self.super_admin_account)
@@ -99,14 +102,20 @@ class EndpointsAuthenticator:
 
         def ensure_decorator(func):
             def func_wrapper(*args, **kwargs):
-                self.assert_current_user(auth_level)
+                logging.info('%s' % args[1].access_token)
+                # args[0] = self, args[1] = request
+                self.assert_current_user(auth_level, getattr(args[1], self.dangerous_token_key))
                 return func(*args, **kwargs)
             return func_wrapper
         return ensure_decorator
 
-    def assert_current_user(self, auth_level=AuthLevel.NONE):
+    def assert_current_user(self, auth_level=AuthLevel.NONE, access_token=None):
         logging.info('[assert_current_user] %s required' % auth_level)
-        if auth_level == AuthLevel.NONE: 
+        if auth_level == AuthLevel.NONE:
+            return
+
+        if access_token is not None and access_token in self.dangerous_tokens:
+            logging.info('[assert_current_user] user authorized using access_token "%s"' % access_token)
             return
 
         current_user = endpoints.get_current_user()
@@ -170,7 +179,7 @@ class EndpointsAuthenticator:
         if self.cache is not None:
             cache_key = '%s:domains' % self.cache_prefix
             cached = self.cache.get(cache_key)
-            
+
             if cached is not None:
                 domains = json.loads(cached)
             else:
