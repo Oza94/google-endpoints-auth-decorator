@@ -102,8 +102,6 @@ class EndpointsAuthenticator:
 
         def ensure_decorator(func):
             def func_wrapper(*args, **kwargs):
-                logging.info('%s' % args[1].access_token)
-                # args[0] = self, args[1] = request
                 self.assert_current_user(auth_level, getattr(args[1], self.dangerous_token_key))
                 return func(*args, **kwargs)
             # copy docstring since its required by endpoints
