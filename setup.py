@@ -10,7 +10,7 @@ setup(name='endpointsauth',
     packages=['endpointsauth'],      
     install_requires=[
         'httplib2',
-        'oauth2client',
+        'oauth2client==1.5.2',
         'google-api-python-client',
         'google-endpoints',
     ],
