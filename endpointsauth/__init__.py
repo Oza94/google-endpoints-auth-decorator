@@ -99,14 +99,20 @@ class EndpointsAuthenticator:
         return self.service
 
     def ensure(self, auth_level=AuthLevel.NONE):
-
         def ensure_decorator(func):
             def func_wrapper(*args, **kwargs):
-                self.assert_current_user(auth_level, getattr(args[1], self.dangerous_token_key))
+                dangerous_token = None
+                try:
+                    dangerous_token = getattr(args[1], self.dangerous_token_key)
+                except Exception:
+                    # attribute dangerous_token_key does not exist on request object
+                    pass
+                self.assert_current_user(auth_level, dangerous_token)
                 return func(*args, **kwargs)
             # copy docstring since its required by endpoints
             func_wrapper.__doc__ = func.__doc__
             return func_wrapper
+
         return ensure_decorator
 
     def assert_current_user(self, auth_level=AuthLevel.NONE, access_token=None):
