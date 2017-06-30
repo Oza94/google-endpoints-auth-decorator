@@ -15,7 +15,7 @@ that is a member of a provided administrator Google Groups
 
 Example :
     authenticator = EndpointsAuthenticator('client_id@gserviceaccount.com',
-        '/path/to/private.pem',
+        '/path/to/key.json',
         'CUSTOMER_ID',
         'superadmin@acme.com',
         'administrators@groups.acme.com',
@@ -45,7 +45,7 @@ import httplib2
 import json
 from googleapiclient.discovery import build
 from googleapiclient.http import HttpError
-from oauth2client.client import SignedJwtAssertionCredentials
+from oauth2client.service_account import ServiceAccountCredentials
 import endpoints
 import logging
 
@@ -86,9 +86,12 @@ class EndpointsAuthenticator:
 
     def get_service(self):
         if self.service is None:
-            key_content = read_key(self.key_path)
-            credentials = SignedJwtAssertionCredentials(self.client_id, key_content, SCOPES,
-                sub=self.super_admin_account)
+            # key_content = read_key(self.key_path)
+            # credentials = SignedJwtAssertionCredentials(self.client_id, key_content, SCOPES,
+            #    sub=self.super_admin_account)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name(self.key_path, SCOPES)
+            if self.super_admin_account:
+                credentials = credentials.create_delegated(self.super_admin_account)
 
             # initialize and authorize http client
             http = httplib2.Http(cache=self.cache)

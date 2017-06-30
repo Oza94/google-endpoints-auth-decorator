@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='endpointsauth',
-    version='0.1',
+    version='0.2',
     description='A simple authentication utility module for Google App Engine endpoints',
     url='http://github.com/path/to/change',
     author='Pierre Beaujeu',
@@ -10,7 +10,7 @@ setup(name='endpointsauth',
     packages=['endpointsauth'],      
     install_requires=[
         'httplib2',
-        'oauth2client==1.5.2',
+        'oauth2client==3.0.0',
         'google-api-python-client',
         'google-endpoints',
     ],
